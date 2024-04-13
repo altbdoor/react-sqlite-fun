@@ -1,17 +1,18 @@
+import { Alert, AlertTitle, Box, CssBaseline, useTheme } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import { Editor } from "./components/Editor";
+import { QueryEditor } from "./components/QueryEditor";
+import { RenderTables } from "./components/RenderTables";
+import { TableStructure } from "./components/TableStructure";
 import DbWorker from "./database-worker?sharedworker";
 import {
   DatabaseWorkerMessage,
   DatabaseWorkerMessageStatus,
 } from "./models/DatabaseWorkerMessage";
-import { ErrorBox } from "./components/ErrorBox";
-import { RenderTables } from "./components/RenderTables";
-import { TableStructure } from "./components/TableStructure";
-import { getTableAndColumns } from "./sql-query";
 import { TableStructureData } from "./models/TableStructureData";
+import { getTableAndColumns } from "./sql-query";
 
 function App() {
+  const { palette } = useTheme();
   const workerRef = useRef<SharedWorker>();
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<Error>();
@@ -70,18 +71,46 @@ function App() {
   };
 
   return (
-    <div className="d-flex vh-100">
-      <div className="w-50 h-100 border-end border-secondary-subtle">
-        <div className="h-100 d-flex flex-column">
-          <Editor execSql={execSql} isReady={isReady} />
+    <>
+      <CssBaseline />
+      <Box
+        display="grid"
+        gridTemplateAreas='"editor tables" "structure tables"'
+        gridTemplateColumns="1fr 1fr"
+        gridTemplateRows="1fr 1fr"
+        height="100vh"
+      >
+        <Box gridArea="editor" maxHeight="50vh">
+          <QueryEditor execSql={execSql} isReady={isReady} />
+        </Box>
+        <Box
+          p={3}
+          overflow="auto"
+          gridArea="tables"
+          borderLeft="1px solid"
+          borderColor={palette.grey[400]}
+        >
+          {!!error && (
+            <Box mb={2}>
+              <Alert severity="error">
+                <AlertTitle>{error.name}</AlertTitle>
+                {error.message}
+              </Alert>
+            </Box>
+          )}
+          <RenderTables data={queryData} />
+        </Box>
+        <Box
+          p={3}
+          overflow="auto"
+          gridArea="structure"
+          borderTop="1px solid"
+          borderColor={palette.grey[400]}
+        >
           <TableStructure data={tableStructure} />
-        </div>
-      </div>
-      <div className="w-50 h-100 p-3 overflow-y-auto">
-        {!!error && <ErrorBox error={error} />}
-        <RenderTables data={queryData} />
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </>
   );
 }
 

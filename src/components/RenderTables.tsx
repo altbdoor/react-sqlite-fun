@@ -1,17 +1,20 @@
+import { Box } from "@mui/material";
+import { CustomTable } from "./CustomTable";
+
 export function RenderTables(props: { data: any[] }) {
   if (props.data.length === 0) {
     return <></>;
   }
 
   const headers = Object.keys(props.data[0]).map((header, idx) => (
-    <th key={header + idx}>{header}</th>
+    <th key={"data-header" + idx}>{header}</th>
   ));
 
   return (
     <>
-      <h4>{props.data.length} result(s)</h4>
-      <div className="table-responsive">
-        <table className="table mb-0 table-sm table-bordered table-striped table-hover font-monospace">
+      <strong>{props.data.length} result(s)</strong>
+      <Box style={{ overflowX: "auto" }}>
+        <CustomTable customCellPadding={1} className="font-monospace">
           <thead>
             <tr>{headers}</tr>
           </thead>
@@ -24,8 +27,8 @@ export function RenderTables(props: { data: any[] }) {
               </tr>
             ))}
           </tbody>
-        </table>
-      </div>
+        </CustomTable>
+      </Box>
     </>
   );
 }

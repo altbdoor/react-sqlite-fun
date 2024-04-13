@@ -14,6 +14,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           codemirror: ["codemirror"],
+          "mui-material": ["@mui/material"],
         },
       },
     },

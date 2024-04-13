@@ -1,4 +1,21 @@
-export const initQuery = "SELECT * FROM Customers LIMIT 20;";
+export const initQuery = `
+-- sample query to get the customer and their orders
+SELECT
+    Customers.CustomerName,
+    Orders.OrderDate,
+    Products.ProductName,
+    OrderDetails.Quantity
+FROM
+    Customers
+JOIN
+    Orders ON Customers.CustomerID = Orders.CustomerID
+JOIN
+    OrderDetails ON Orders.OrderID = OrderDetails.OrderID
+JOIN
+    Products ON OrderDetails.ProductID = Products.ProductID
+ORDER BY
+    Orders.OrderDate;
+`.trim();
 
 export const getAllTables = `
 SELECT * FROM sqlite_master WHERE type = 'table' AND name != 'sqlite_sequence';
@@ -7,7 +24,7 @@ SELECT * FROM sqlite_master WHERE type = 'table' AND name != 'sqlite_sequence';
 export const getTableAndColumns = `
 SELECT
     m.name AS table_name,
-    group_concat(i.name, ',') AS column_names
+    GROUP_CONCAT(i.name, ', ') AS column_names
 FROM
     sqlite_master AS m
 JOIN
