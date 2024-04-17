@@ -1,42 +1,52 @@
 import { Stack } from "@mui/material";
-import { EditorFromTextArea, fromTextArea } from "codemirror";
+import { editor } from "monaco-editor/esm/vs/editor/editor.api";
 import { useEffect, useRef } from "react";
 import { initQuery } from "../sql-query";
 import { QueryEditorBar } from "./QueryEditorBar";
 
-import "codemirror/addon/hint/show-hint";
-import "codemirror/addon/hint/sql-hint";
-import "codemirror/addon/scroll/scrollpastend";
-import "codemirror/addon/selection/active-line";
-import "codemirror/addon/comment/comment";
+import "../monaco-worker.ts";
 
 export function QueryEditor(props: {
   execSql: (query: string) => void;
   isReady: boolean;
 }) {
   const containerRef = useRef(null);
-  const editorRef = useRef<EditorFromTextArea>();
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>();
+
+  // useEffect(() => {
+  //   const editor = fromTextArea(containerRef.current!, {
+  //     mode: "text/x-sqlite",
+  //     lineNumbers: true,
+  //     lineWrapping: true,
+  //     inputStyle: "contenteditable",
+  //     lineSeparator: "\n",
+  //     styleActiveLine: { nonEmpty: true },
+  //     scrollPastEnd: true,
+  //     extraKeys: {
+  //       "Ctrl-Space": "autocomplete",
+  //       "Ctrl-/": "toggleComment",
+  //       "Ctrl-Enter": () => execSql(),
+  //     },
+  //   });
+
+  //   editorRef.current = editor;
+  //   editor.setValue(initQuery);
+
+  //   return () => editor.toTextArea();
+  // }, []);
 
   useEffect(() => {
-    const editor = fromTextArea(containerRef.current!, {
-      mode: "text/x-sqlite",
-      lineNumbers: true,
-      lineWrapping: true,
-      inputStyle: "contenteditable",
-      lineSeparator: "\n",
-      styleActiveLine: { nonEmpty: true },
-      scrollPastEnd: true,
-      extraKeys: {
-        "Ctrl-Space": "autocomplete",
-        "Ctrl-/": "toggleComment",
-        "Ctrl-Enter": () => execSql(),
-      },
+    const editorInstance = editor.create(containerRef.current!, {
+      value: initQuery,
+      language: "sql",
+      minimap: { enabled: false },
+      wordWrap: "on",
+      renderWhitespace: "all",
+      fontSize: 16,
     });
 
-    editorRef.current = editor;
-    editor.setValue(initQuery);
-
-    return () => editor.toTextArea();
+    editorRef.current = editorInstance;
+    return () => editorInstance.dispose();
   }, []);
 
   const execSql = (query?: string) => {
@@ -54,8 +64,7 @@ export function QueryEditor(props: {
   return (
     <Stack height="100%" className="editor">
       <QueryEditorBar isReady={props.isReady} execSql={execSql} />
-      <div>{/* odd div needed for codemirror textarea */}</div>
-      <textarea ref={containerRef}></textarea>
+      <div ref={containerRef} style={{ height: "100%" }}></div>
     </Stack>
   );
 }

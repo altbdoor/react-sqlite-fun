@@ -46,6 +46,7 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
       className="editor__actions"
       px={2}
       display="flex"
+      flexShrink={0}
       alignItems="center"
       justifyContent="space-between"
       borderBottom={`1px solid ${palette.grey[400]}`}
