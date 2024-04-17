@@ -1,5 +1,5 @@
 import { Alert, AlertTitle, Box, CssBaseline, useTheme } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { QueryEditor } from "./components/QueryEditor";
 import { RenderTables } from "./components/RenderTables";
 import { TableStructure } from "./components/TableStructure";
@@ -61,14 +61,14 @@ function App() {
     return () => worker.port.close();
   }, []);
 
-  const execSql = (query: string) => {
+  const execSql = useCallback((query: string) => {
     setError(undefined);
 
     workerRef.current!.port.postMessage({
       mode: DatabaseWorkerMessageStatus.QUERYRESULT,
       query,
     });
-  };
+  }, []);
 
   return (
     <>

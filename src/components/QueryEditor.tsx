@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
-import { EditorFromTextArea, fromTextArea } from "codemirror";
-import { useEffect, useRef } from "react";
+import { Editor, EditorFromTextArea, fromTextArea } from "codemirror";
+import { useCallback, useEffect, useRef } from "react";
 import { initQuery } from "../sql-query";
 import { QueryEditorBar } from "./QueryEditorBar";
 
@@ -10,12 +10,26 @@ import "codemirror/addon/scroll/scrollpastend";
 import "codemirror/addon/selection/active-line";
 import "codemirror/addon/comment/comment";
 
-export function QueryEditor(props: {
+export function QueryEditor({
+  execSql,
+  ...props
+}: {
   execSql: (query: string) => void;
   isReady: boolean;
 }) {
   const containerRef = useRef(null);
   const editorRef = useRef<EditorFromTextArea>();
+
+  const editorExecSql = useCallback(
+    (query?: string) => {
+      if (query) {
+        editorRef.current!.setValue(query);
+      }
+
+      execSql(editorRef.current!.getValue());
+    },
+    [execSql],
+  );
 
   useEffect(() => {
     const editor = fromTextArea(containerRef.current!, {
@@ -29,31 +43,34 @@ export function QueryEditor(props: {
       extraKeys: {
         "Ctrl-Space": "autocomplete",
         "Ctrl-/": "toggleComment",
-        "Ctrl-Enter": () => execSql(),
+        "Ctrl-Enter": () => editorExecSql(),
       },
     });
 
     editorRef.current = editor;
     editor.setValue(initQuery);
 
-    return () => editor.toTextArea();
-  }, []);
+    const handleInputRead = (instance: Editor) => {
+      if (instance.state.completionActive) {
+        return;
+      }
 
-  const execSql = (query?: string) => {
-    if (!editorRef.current) {
-      return;
-    }
+      instance.showHint({
+        completeSingle: false,
+        // tables: { Customers: ['CustomerName'] }
+      });
+    };
+    editor.on("inputRead", handleInputRead);
 
-    if (query) {
-      editorRef.current.setValue(query);
-    }
-
-    props.execSql(editorRef.current.getValue());
-  };
+    return () => {
+      editor.off("inputRead", handleInputRead);
+      editor.toTextArea();
+    };
+  }, [editorExecSql]);
 
   return (
     <Stack height="100%" className="editor">
-      <QueryEditorBar isReady={props.isReady} execSql={execSql} />
+      <QueryEditorBar isReady={props.isReady} execSql={editorExecSql} />
       <div>{/* odd div needed for codemirror textarea */}</div>
       <textarea ref={containerRef}></textarea>
     </Stack>

@@ -49,6 +49,7 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
       alignItems="center"
       justifyContent="space-between"
       borderBottom={`1px solid ${palette.grey[400]}`}
+      flexShrink={0}
     >
       <ButtonGroup ref={extrasAnchorRef}>
         <Button type="button" onClick={() => setOpenExtras((prev) => !prev)}>

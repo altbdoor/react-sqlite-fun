@@ -6,11 +6,14 @@ interface CustomTableProps extends TableHTMLAttributes<HTMLTableElement> {
   children: ReactNode;
 }
 
-export const CustomTable = styled(
-  ({ children, ...props }: CustomTableProps) => (
-    <table {...props}>{children}</table>
-  ),
-)(
+const TableSettings = styled(
+  "table",
+  { shouldForwardProp: (propName) => propName !== "customCellPadding" },
+  // ({ children, ...props }: CustomTableProps) => (
+  //   <table {...props}>{children}</table>
+  // ),
+);
+export const CustomTable = TableSettings<CustomTableProps>(
   ({ theme, customCellPadding }) => `
     & {
       border-collapse: collapse;
