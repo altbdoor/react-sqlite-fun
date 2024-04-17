@@ -1,4 +1,4 @@
-import * as monaco from "monaco-editor";
+import { languages } from "monaco-editor";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 
 self.MonacoEnvironment = {
@@ -7,4 +7,4 @@ self.MonacoEnvironment = {
   },
 };
 
-monaco.languages.register({ id: "sql" });
+languages.register({ id: "sql" });

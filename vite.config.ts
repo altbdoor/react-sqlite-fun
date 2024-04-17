@@ -13,7 +13,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          codemirror: ["codemirror"],
+          "monaco-editor": ["monaco-editor"],
           "mui-material": ["@mui/material"],
         },
       },
