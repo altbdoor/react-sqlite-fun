@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import { CustomTable } from "./CustomTable";
 
 export function RenderTables(props: { data: any[] }) {

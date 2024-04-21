@@ -1,14 +1,15 @@
-import { Stack } from "@mui/material";
+import Stack from "@mui/material/Stack";
 import { Editor, EditorFromTextArea, fromTextArea } from "codemirror";
 import { useCallback, useEffect, useRef } from "react";
+import { FixedTableStructureData } from "../models/TableStructureData";
 import { initQuery } from "../sql-query";
 import { QueryEditorBar } from "./QueryEditorBar";
 
+import "codemirror/addon/comment/comment";
 import "codemirror/addon/hint/show-hint";
 import "codemirror/addon/hint/sql-hint";
 import "codemirror/addon/scroll/scrollpastend";
 import "codemirror/addon/selection/active-line";
-import "codemirror/addon/comment/comment";
 
 export function QueryEditor({
   execSql,
@@ -16,6 +17,7 @@ export function QueryEditor({
 }: {
   execSql: (query: string) => void;
   isReady: boolean;
+  tableStructure: FixedTableStructureData
 }) {
   const containerRef = useRef(null);
   const editorRef = useRef<EditorFromTextArea>();
@@ -57,7 +59,7 @@ export function QueryEditor({
 
       instance.showHint({
         completeSingle: false,
-        // tables: { Customers: ['CustomerName'] }
+        // tables: { ...tableStructure }
       });
     };
     editor.on("inputRead", handleInputRead);

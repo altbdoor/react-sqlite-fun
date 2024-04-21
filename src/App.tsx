@@ -1,4 +1,8 @@
-import { Alert, AlertTitle, Box, CssBaseline, useTheme } from "@mui/material";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
+import Box from "@mui/material/Box";
+import CssBaseline from "@mui/material/CssBaseline";
+import { useTheme } from "@mui/material/styles";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { QueryEditor } from "./components/QueryEditor";
 import { RenderTables } from "./components/RenderTables";
@@ -8,7 +12,7 @@ import {
   DatabaseWorkerMessage,
   DatabaseWorkerMessageStatus,
 } from "./models/DatabaseWorkerMessage";
-import { TableStructureData } from "./models/TableStructureData";
+import { FixedTableStructureData, TableStructureData } from "./models/TableStructureData";
 import { getTableAndColumns } from "./sql-query";
 
 function App() {
@@ -17,9 +21,7 @@ function App() {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<Error>();
   const [queryData, setQueryData] = useState<any[]>([]);
-  const [tableStructure, setTableStructure] = useState<TableStructureData[]>(
-    [],
-  );
+  const [tableStructure, setTableStructure] = useState<FixedTableStructureData>({});
 
   useEffect(() => {
     const worker = new DbWorker();
@@ -49,7 +51,12 @@ function App() {
           break;
 
         case DatabaseWorkerMessageStatus.HIDDENRESULT:
-          setTableStructure(response.data);
+          setTableStructure(() => {
+            return (response.data as TableStructureData[]).reduce((acc, val) => {
+              acc[val.table_name] = val.column_names.split(', ');
+              return acc;
+            }, {} as FixedTableStructureData);
+          });
           break;
 
         default:
@@ -81,7 +88,7 @@ function App() {
         height="100vh"
       >
         <Box gridArea="editor" maxHeight="50vh">
-          <QueryEditor execSql={execSql} isReady={isReady} />
+          <QueryEditor execSql={execSql} isReady={isReady} tableStructure={tableStructure} />
         </Box>
         <Box
           p={3}

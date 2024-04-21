@@ -1,4 +1,4 @@
-import { styled } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import { ReactNode, TableHTMLAttributes } from "react";
 
 interface CustomTableProps extends TableHTMLAttributes<HTMLTableElement> {
@@ -13,6 +13,7 @@ const TableSettings = styled(
   //   <table {...props}>{children}</table>
   // ),
 );
+
 export const CustomTable = TableSettings<CustomTableProps>(
   ({ theme, customCellPadding }) => `
     & {

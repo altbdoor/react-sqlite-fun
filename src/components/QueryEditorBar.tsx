@@ -1,16 +1,14 @@
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Chip,
-  ClickAwayListener,
-  MenuItem,
-  MenuList,
-  Paper,
-  Popper,
-  Tooltip,
-  useTheme,
-} from "@mui/material";
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Chip from '@mui/material/Chip';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
+import Paper from '@mui/material/Paper';
+import Popper from '@mui/material/Popper';
+import Tooltip from '@mui/material/Tooltip';
+import { useTheme } from "@mui/material/styles";
 import { useRef, useState } from "react";
 import { getAllTables, getTableAndColumns } from "../sql-query";
 
