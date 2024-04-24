@@ -13,6 +13,7 @@ import "codemirror/addon/selection/active-line";
 
 export function QueryEditor({
   execSql,
+  tableStructure,
   ...props
 }: {
   execSql: (query: string) => void;
@@ -42,15 +43,30 @@ export function QueryEditor({
       lineSeparator: "\n",
       styleActiveLine: { nonEmpty: true },
       scrollPastEnd: true,
-      extraKeys: {
-        "Ctrl-Space": "autocomplete",
-        "Ctrl-/": "toggleComment",
-        "Ctrl-Enter": () => editorExecSql(),
-      },
     });
 
     editorRef.current = editor;
     editor.setValue(initQuery);
+
+    return () => editor.toTextArea();
+  }, []);
+
+  useEffect(() => {
+    if (!editorRef.current) {
+      return
+    }
+
+    editorRef.current.setOption('extraKeys', {
+      "Ctrl-Space": "autocomplete",
+      "Ctrl-/": "toggleComment",
+      "Ctrl-Enter": () => editorExecSql(),
+    })
+  }, [editorExecSql])
+
+  useEffect(() => {
+    if (!editorRef.current) {
+      return
+    }
 
     const handleInputRead = (instance: Editor) => {
       if (instance.state.completionActive) {
@@ -59,16 +75,13 @@ export function QueryEditor({
 
       instance.showHint({
         completeSingle: false,
-        // tables: { ...tableStructure }
+        tables: { ...tableStructure }
       });
     };
-    editor.on("inputRead", handleInputRead);
 
-    return () => {
-      editor.off("inputRead", handleInputRead);
-      editor.toTextArea();
-    };
-  }, [editorExecSql]);
+    editorRef.current.on('inputRead', handleInputRead);
+    return () => editorRef.current?.off('inputRead', handleInputRead);
+  }, [tableStructure])
 
   return (
     <Stack height="100%" className="editor">
