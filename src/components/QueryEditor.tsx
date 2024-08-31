@@ -18,7 +18,7 @@ export function QueryEditor({
 }: {
   execSql: (query: string) => void;
   isReady: boolean;
-  tableStructure: FixedTableStructureData
+  tableStructure: FixedTableStructureData;
 }) {
   const containerRef = useRef(null);
   const editorRef = useRef<EditorFromTextArea>();
@@ -53,19 +53,19 @@ export function QueryEditor({
 
   useEffect(() => {
     if (!editorRef.current) {
-      return
+      return;
     }
 
-    editorRef.current.setOption('extraKeys', {
+    editorRef.current.setOption("extraKeys", {
       "Ctrl-Space": "autocomplete",
       "Ctrl-/": "toggleComment",
       "Ctrl-Enter": () => editorExecSql(),
-    })
-  }, [editorExecSql])
+    });
+  }, [editorExecSql]);
 
   useEffect(() => {
     if (!editorRef.current) {
-      return
+      return;
     }
 
     const handleInputRead = (instance: Editor) => {
@@ -75,13 +75,13 @@ export function QueryEditor({
 
       instance.showHint({
         completeSingle: false,
-        tables: { ...tableStructure }
+        tables: { ...tableStructure },
       });
     };
 
-    editorRef.current.on('inputRead', handleInputRead);
-    return () => editorRef.current?.off('inputRead', handleInputRead);
-  }, [tableStructure])
+    editorRef.current.on("inputRead", handleInputRead);
+    return () => editorRef.current?.off("inputRead", handleInputRead);
+  }, [tableStructure]);
 
   return (
     <Stack height="100%" className="editor">

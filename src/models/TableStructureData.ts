@@ -3,4 +3,4 @@ export interface TableStructureData {
   column_names: string;
 }
 
-export type FixedTableStructureData = { [key: string]: string[] }
+export type FixedTableStructureData = { [key: string]: string[] };

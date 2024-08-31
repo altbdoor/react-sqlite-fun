@@ -12,7 +12,10 @@ import {
   DatabaseWorkerMessage,
   DatabaseWorkerMessageStatus,
 } from "./models/DatabaseWorkerMessage";
-import { FixedTableStructureData, TableStructureData } from "./models/TableStructureData";
+import {
+  FixedTableStructureData,
+  TableStructureData,
+} from "./models/TableStructureData";
 import { getTableAndColumns } from "./sql-query";
 
 function App() {
@@ -21,7 +24,9 @@ function App() {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<Error>();
   const [queryData, setQueryData] = useState<any[]>([]);
-  const [tableStructure, setTableStructure] = useState<FixedTableStructureData>({});
+  const [tableStructure, setTableStructure] = useState<FixedTableStructureData>(
+    {},
+  );
 
   useEffect(() => {
     const worker = new DbWorker();
@@ -52,10 +57,13 @@ function App() {
 
         case DatabaseWorkerMessageStatus.HIDDENRESULT:
           setTableStructure(() => {
-            return (response.data as TableStructureData[]).reduce((acc, val) => {
-              acc[val.table_name] = val.column_names.split(', ');
-              return acc;
-            }, {} as FixedTableStructureData);
+            return (response.data as TableStructureData[]).reduce(
+              (acc, val) => {
+                acc[val.table_name] = val.column_names.split(", ");
+                return acc;
+              },
+              {} as FixedTableStructureData,
+            );
           });
           break;
 
@@ -88,7 +96,11 @@ function App() {
         height="100vh"
       >
         <Box gridArea="editor" maxHeight="50vh">
-          <QueryEditor execSql={execSql} isReady={isReady} tableStructure={tableStructure} />
+          <QueryEditor
+            execSql={execSql}
+            isReady={isReady}
+            tableStructure={tableStructure}
+          />
         </Box>
         <Box
           p={3}
