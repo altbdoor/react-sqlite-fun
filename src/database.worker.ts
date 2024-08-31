@@ -1,34 +1,48 @@
-import sqlite3InitModule, { Database } from "@sqlite.org/sqlite-wasm";
+import sqlite3InitModule, {
+  type Database,
+  type Sqlite3Static,
+} from "@sqlite.org/sqlite-wasm";
 import { DatabaseWorkerMessageStatus } from "./models/DatabaseWorkerMessage";
 
 let isInit = false;
 let globDb: Database | undefined = undefined;
-let tableCount = 0;
+let globSqlite: Sqlite3Static | undefined = undefined;
 
 interface QueryData {
   mode:
     | DatabaseWorkerMessageStatus.QUERYRESULT
-    | DatabaseWorkerMessageStatus.HIDDENRESULT;
+    | DatabaseWorkerMessageStatus.HIDDENRESULT
+    | DatabaseWorkerMessageStatus.EXPORTDATABASE;
   query: string;
 }
+
+const getTableCount = () => {
+  if (!globDb) {
+    return -1;
+  }
+
+  const count = globDb.exec({
+    sql: "SELECT count(*) FROM sqlite_master WHERE type = 'table';",
+    returnValue: "resultRows",
+  });
+
+  return count[0][0] as number;
+};
 
 self.addEventListener("connect", async (evt) => {
   const port = (evt as any).ports[0] as MessagePort;
 
   if (!isInit) {
     try {
-      globDb = await initCode();
-      isInit = true;
+      const init = await initCode();
+      globDb = init.db;
+      globSqlite = init.sqlite;
 
-      const count = globDb.exec({
-        sql: "SELECT count(*) FROM sqlite_master WHERE type = 'table';",
-        returnValue: "resultRows",
-      });
-      tableCount = count[0][0] as number;
+      isInit = true;
 
       port.postMessage({
         status: DatabaseWorkerMessageStatus.INITREADY,
-        data: tableCount,
+        data: getTableCount(),
       });
     } catch (err) {
       console.error(err);
@@ -38,6 +52,8 @@ self.addEventListener("connect", async (evt) => {
       });
     }
   } else {
+    const tableCount = getTableCount();
+
     if (tableCount > 0) {
       port.postMessage({
         status: DatabaseWorkerMessageStatus.INITREADY,
@@ -50,6 +66,13 @@ self.addEventListener("connect", async (evt) => {
 
   port.onmessage = async (portEvt) => {
     const portEvtData: QueryData = portEvt.data;
+
+    if (portEvtData.mode === DatabaseWorkerMessageStatus.EXPORTDATABASE) {
+      // https://sqlite.org/wasm/doc/trunk/cookbook.md#impexp
+      const byteArray = globSqlite!.capi.sqlite3_js_db_export(globDb!);
+      port.postMessage({ status: portEvtData.mode, data: byteArray.buffer });
+      return;
+    }
 
     try {
       const data = globDb!.exec({
@@ -71,7 +94,7 @@ self.addEventListener("connect", async (evt) => {
 
 async function initCode() {
   const sqlite = await sqlite3InitModule();
-  const db = new sqlite.oo1.DB("/northwind.sqlite", "c");
+  const db = new sqlite.oo1.DB({ filename: "/northwind.sqlite", flags: "cw" });
 
   db.exec("BEGIN TRANSACTION;");
   try {
@@ -86,5 +109,5 @@ async function initCode() {
     db.exec("ROLLBACK;");
   }
 
-  return db;
+  return { db, sqlite };
 }

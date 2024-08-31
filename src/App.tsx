@@ -17,6 +17,7 @@ import {
   TableStructureData,
 } from "./models/TableStructureData";
 import { getTableAndColumns } from "./sql-query";
+import { anchorClick } from "./hooks/anchor-click";
 
 function App() {
   const { palette } = useTheme();
@@ -27,6 +28,22 @@ function App() {
   const [tableStructure, setTableStructure] = useState<FixedTableStructureData>(
     {},
   );
+
+  const blobRef = useRef<string>("");
+
+  const downloadExportedDb = useCallback((buffer: ArrayBuffer) => {
+    const blob = new Blob([buffer], { type: "application/x-sqlite3" });
+
+    if (blobRef.current) {
+      URL.revokeObjectURL(blobRef.current);
+    }
+
+    blobRef.current = URL.createObjectURL(blob);
+    anchorClick({
+      href: blobRef.current,
+      download: "database.sqlite",
+    });
+  }, []);
 
   useEffect(() => {
     const worker = new DbWorker();
@@ -67,6 +84,10 @@ function App() {
           });
           break;
 
+        case DatabaseWorkerMessageStatus.EXPORTDATABASE:
+          downloadExportedDb(response.data);
+          break;
+
         default:
           break;
       }
@@ -74,7 +95,7 @@ function App() {
 
     workerRef.current = worker;
     return () => worker.port.close();
-  }, []);
+  }, [downloadExportedDb]);
 
   const execSql = useCallback((query: string) => {
     setError(undefined);
@@ -84,6 +105,12 @@ function App() {
       query,
     });
   }, []);
+
+  const exportDb = () => {
+    workerRef.current!.port.postMessage({
+      mode: DatabaseWorkerMessageStatus.EXPORTDATABASE,
+    });
+  };
 
   return (
     <>
@@ -98,6 +125,7 @@ function App() {
         <Box gridArea="editor" maxHeight="50vh">
           <QueryEditor
             execSql={execSql}
+            exportDb={exportDb}
             isReady={isReady}
             tableStructure={tableStructure}
           />

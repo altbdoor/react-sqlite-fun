@@ -4,6 +4,7 @@ export enum DatabaseWorkerMessageStatus {
   QUERYRESULT,
   QUERYERROR,
   HIDDENRESULT,
+  EXPORTDATABASE,
 }
 
 type InitReady = {
@@ -23,10 +24,15 @@ type HiddenResult = {
   status: DatabaseWorkerMessageStatus.HIDDENRESULT;
   data: any[];
 };
+type ExportDatabase = {
+  status: DatabaseWorkerMessageStatus.EXPORTDATABASE;
+  data: ArrayBuffer;
+};
 
 export type DatabaseWorkerMessage =
   | InitReady
   | InitError
   | QueryError
   | QueryResult
-  | HiddenResult;
+  | HiddenResult
+  | ExportDatabase;

@@ -11,15 +11,19 @@ import "codemirror/addon/hint/sql-hint";
 import "codemirror/addon/scroll/scrollpastend";
 import "codemirror/addon/selection/active-line";
 
-export function QueryEditor({
-  execSql,
-  tableStructure,
-  ...props
-}: {
+interface QueryEditorProps {
   execSql: (query: string) => void;
+  exportDb: () => void;
   isReady: boolean;
   tableStructure: FixedTableStructureData;
-}) {
+}
+
+export function QueryEditor({
+  execSql,
+  exportDb,
+  tableStructure,
+  ...props
+}: QueryEditorProps) {
   const containerRef = useRef(null);
   const editorRef = useRef<EditorFromTextArea>();
 
@@ -85,7 +89,11 @@ export function QueryEditor({
 
   return (
     <Stack height="100%" className="editor">
-      <QueryEditorBar isReady={props.isReady} execSql={editorExecSql} />
+      <QueryEditorBar
+        isReady={props.isReady}
+        execSql={editorExecSql}
+        exportDb={exportDb}
+      />
       <div>{/* odd div needed for codemirror textarea */}</div>
       <textarea ref={containerRef}></textarea>
     </Stack>
