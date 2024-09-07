@@ -3,6 +3,6 @@
   "compilerOptions": {
     "lib": ["ES2020", "WebWorker"]
   },
-  "include": ["**/*.worker.ts", "**/*.d.ts"],
+  "include": ["src/workers/", "src/assets", "src/vite-env.d.ts"],
   "exclude": []
 }

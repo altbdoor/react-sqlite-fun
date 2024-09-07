@@ -7,15 +7,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { QueryEditor } from "./components/QueryEditor";
 import { RenderTables } from "./components/RenderTables";
 import { TableStructure } from "./components/TableStructure";
-import DbWorker from "./database.worker?sharedworker";
+import DbWorker from "./workers/database.worker?sharedworker";
 import {
   DatabaseWorkerMessage,
   DatabaseWorkerMessageStatus,
-} from "./models/DatabaseWorkerMessage";
+} from "./shared/models/DatabaseWorkerMessage";
 import {
   FixedTableStructureData,
   TableStructureData,
-} from "./models/TableStructureData";
+} from "./shared/models/TableStructureData";
 import { getTableAndColumns } from "./sql-query";
 import { anchorClick } from "./hooks/anchor-click";
 

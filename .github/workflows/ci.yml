@@ -33,7 +33,7 @@ jobs:
 
       - run: |
           npm ci
-          npx tsc
+          npx tsc -b
           npx vite build --base "${{ steps.pages.outputs.base_path }}"
 
       - name: Upload artifact

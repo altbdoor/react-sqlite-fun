@@ -2,7 +2,7 @@ import sqlite3InitModule, {
   type Database,
   type Sqlite3Static,
 } from "@sqlite.org/sqlite-wasm";
-import { DatabaseWorkerMessageStatus } from "./models/DatabaseWorkerMessage";
+import { DatabaseWorkerMessageStatus } from "../shared/models/DatabaseWorkerMessage";
 
 let isInit = false;
 let globDb: Database | undefined = undefined;
@@ -99,7 +99,7 @@ async function initCode() {
   db.exec("BEGIN TRANSACTION;");
   try {
     // https://en.wikiversity.org/wiki/Database_Examples/Northwind/SQLite
-    const northwindSql = await import("./assets/northwind.sql?raw").then(
+    const northwindSql = await import("../assets/northwind.sql?raw").then(
       (res) => res.default,
     );
     db.exec(northwindSql);

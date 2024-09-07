@@ -1,4 +1,4 @@
-import { FixedTableStructureData } from "../models/TableStructureData";
+import { FixedTableStructureData } from "../shared/models/TableStructureData";
 import { CustomTable } from "./CustomTable";
 
 export function TableStructure(props: { data: FixedTableStructureData }) {

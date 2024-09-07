@@ -1,7 +1,7 @@
 import Stack from "@mui/material/Stack";
 import { Editor, EditorFromTextArea, fromTextArea } from "codemirror";
 import { useCallback, useEffect, useRef } from "react";
-import { FixedTableStructureData } from "../models/TableStructureData";
+import { FixedTableStructureData } from "../shared/models/TableStructureData";
 import { initQuery } from "../sql-query";
 import { QueryEditorBar } from "./QueryEditorBar";
 
