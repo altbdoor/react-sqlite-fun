@@ -11,7 +11,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { useTheme } from "@mui/material/styles";
 import { useRef, useState } from "react";
 import { anchorClick } from "../hooks/anchor-click";
-import { getAllTables, getTableAndColumns } from "../sql-query";
+import { getAllTables, getTableAndColumns } from "../shared/sql-query";
 
 interface QueryEditorBarProps {
   isReady: boolean;

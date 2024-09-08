@@ -3,114 +3,15 @@ import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
 import { useTheme } from "@mui/material/styles";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { QueryEditor } from "./components/QueryEditor";
 import { RenderTables } from "./components/RenderTables";
 import { TableStructure } from "./components/TableStructure";
-import DbWorker from "./workers/database.worker?sharedworker";
-import {
-  DatabaseWorkerMessage,
-  DatabaseWorkerMessageStatus,
-} from "./shared/models/DatabaseWorkerMessage";
-import {
-  FixedTableStructureData,
-  TableStructureData,
-} from "./shared/models/TableStructureData";
-import { getTableAndColumns } from "./sql-query";
-import { anchorClick } from "./hooks/anchor-click";
+import { useDatabaseWorker } from "./hooks/use-database-worker";
 
 function App() {
   const { palette } = useTheme();
-  const workerRef = useRef<SharedWorker>();
-  const [isReady, setIsReady] = useState(false);
-  const [error, setError] = useState<Error>();
-  const [queryData, setQueryData] = useState<any[]>([]);
-  const [tableStructure, setTableStructure] = useState<FixedTableStructureData>(
-    {},
-  );
-
-  const blobRef = useRef<string>("");
-
-  const downloadExportedDb = useCallback((buffer: ArrayBuffer) => {
-    const blob = new Blob([buffer], { type: "application/x-sqlite3" });
-
-    if (blobRef.current) {
-      URL.revokeObjectURL(blobRef.current);
-    }
-
-    blobRef.current = URL.createObjectURL(blob);
-    anchorClick({
-      href: blobRef.current,
-      download: "database.sqlite",
-    });
-  }, []);
-
-  useEffect(() => {
-    const worker = new DbWorker();
-    worker.port.onmessage = (evt) => {
-      const response: DatabaseWorkerMessage = evt.data;
-
-      switch (response.status) {
-        case DatabaseWorkerMessageStatus.INITERROR:
-        case DatabaseWorkerMessageStatus.QUERYERROR:
-          setError(response.data);
-          break;
-
-        case DatabaseWorkerMessageStatus.INITREADY:
-          setIsReady(true);
-          worker.port.postMessage({
-            mode: DatabaseWorkerMessageStatus.HIDDENRESULT,
-            query: getTableAndColumns,
-          });
-          break;
-
-        case DatabaseWorkerMessageStatus.QUERYRESULT:
-          setQueryData(response.data);
-          worker.port.postMessage({
-            mode: DatabaseWorkerMessageStatus.HIDDENRESULT,
-            query: getTableAndColumns,
-          });
-          break;
-
-        case DatabaseWorkerMessageStatus.HIDDENRESULT:
-          setTableStructure(() => {
-            return (response.data as TableStructureData[]).reduce(
-              (acc, val) => {
-                acc[val.table_name] = val.column_names.split(", ");
-                return acc;
-              },
-              {} as FixedTableStructureData,
-            );
-          });
-          break;
-
-        case DatabaseWorkerMessageStatus.EXPORTDATABASE:
-          downloadExportedDb(response.data);
-          break;
-
-        default:
-          break;
-      }
-    };
-
-    workerRef.current = worker;
-    return () => worker.port.close();
-  }, [downloadExportedDb]);
-
-  const execSql = useCallback((query: string) => {
-    setError(undefined);
-
-    workerRef.current!.port.postMessage({
-      mode: DatabaseWorkerMessageStatus.QUERYRESULT,
-      query,
-    });
-  }, []);
-
-  const exportDb = () => {
-    workerRef.current!.port.postMessage({
-      mode: DatabaseWorkerMessageStatus.EXPORTDATABASE,
-    });
-  };
+  const { isReady, error, queryData, tableStructure, execSql, exportDb } =
+    useDatabaseWorker();
 
   return (
     <>
