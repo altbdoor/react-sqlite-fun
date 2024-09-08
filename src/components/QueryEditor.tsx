@@ -1,6 +1,7 @@
 import Stack from "@mui/material/Stack";
 import { Editor, EditorFromTextArea, fromTextArea } from "codemirror";
 import { useCallback, useEffect, useRef } from "react";
+import { useDatabaseWorker } from "../hooks/use-database-worker";
 import { FixedTableStructureData } from "../shared/models/TableStructureData";
 import { initQuery } from "../shared/sql-query";
 import { QueryEditorBar } from "./QueryEditorBar";
@@ -12,20 +13,14 @@ import "codemirror/addon/scroll/scrollpastend";
 import "codemirror/addon/selection/active-line";
 
 interface QueryEditorProps {
-  execSql: (query: string) => void;
-  exportDb: () => void;
   isReady: boolean;
   tableStructure: FixedTableStructureData;
 }
 
-export function QueryEditor({
-  execSql,
-  exportDb,
-  tableStructure,
-  ...props
-}: QueryEditorProps) {
+export function QueryEditor({ tableStructure, ...props }: QueryEditorProps) {
   const containerRef = useRef(null);
   const editorRef = useRef<EditorFromTextArea>();
+  const { execSql, exportDb } = useDatabaseWorker();
 
   const editorExecSql = useCallback(
     (query?: string) => {

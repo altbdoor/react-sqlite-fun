@@ -1,26 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
+import { DatabaseWorkerContext } from "../providers/database-worker-context";
 import {
   DatabaseWorkerMessage,
   DatabaseWorkerMessageStatus,
 } from "../shared/models/DatabaseWorkerMessage";
-import DbWorker from "../workers/database.worker?sharedworker";
-import { getTableAndColumns } from "../shared/sql-query";
 import {
   FixedTableStructureData,
   TableStructureData,
 } from "../shared/models/TableStructureData";
+import { getTableAndColumns } from "../shared/sql-query";
+import DbWorker from "../workers/database.worker?sharedworker";
 import { anchorClick } from "./anchor-click";
 
+export const useDatabaseWorkerContext = () => {
+  const context = useContext(DatabaseWorkerContext);
+  if (!context) {
+    throw new Error("invalid context");
+  }
+  return context;
+};
+
 export function useDatabaseWorker() {
+  const { setIsReady, setError, setQueryData, setTableStructure } =
+    useDatabaseWorkerContext();
+
   const dbWorkerRef = useRef<SharedWorker | null>(null);
-  const [isReady, setIsReady] = useState(false);
-  const [error, setError] = useState<Error>();
-
-  const [queryData, setQueryData] = useState<any[]>([]);
-  const [tableStructure, setTableStructure] = useState<FixedTableStructureData>(
-    {},
-  );
-
   const blobRef = useRef<string>("");
 
   useEffect(() => {
@@ -90,20 +94,23 @@ export function useDatabaseWorker() {
 
     return () => {
       if (dbWorkerRef.current) {
-        dbWorkerRef.current.port.onmessage = null;
-        // dbWorkerRef.current.port.close();
+        dbWorkerRef.current.port.close();
+        dbWorkerRef.current = null;
       }
     };
-  }, []);
+  }, [setIsReady, setError, setQueryData, setTableStructure]);
 
-  const execSql = useCallback((query: string) => {
-    setError(undefined);
+  const execSql = useCallback(
+    (query: string) => {
+      setError(undefined);
 
-    dbWorkerRef.current?.port.postMessage({
-      mode: DatabaseWorkerMessageStatus.QUERYRESULT,
-      query,
-    });
-  }, []);
+      dbWorkerRef.current?.port.postMessage({
+        mode: DatabaseWorkerMessageStatus.QUERYRESULT,
+        query,
+      });
+    },
+    [setError],
+  );
 
   const exportDb = useCallback(() => {
     dbWorkerRef.current?.port.postMessage({
@@ -112,10 +119,6 @@ export function useDatabaseWorker() {
   }, []);
 
   return {
-    isReady,
-    error,
-    queryData,
-    tableStructure,
     execSql,
     exportDb,
   };

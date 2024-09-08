@@ -6,12 +6,12 @@ import { useTheme } from "@mui/material/styles";
 import { QueryEditor } from "./components/QueryEditor";
 import { RenderTables } from "./components/RenderTables";
 import { TableStructure } from "./components/TableStructure";
-import { useDatabaseWorker } from "./hooks/use-database-worker";
+import { useDatabaseWorkerContext } from "./hooks/use-database-worker";
 
 function App() {
   const { palette } = useTheme();
-  const { isReady, error, queryData, tableStructure, execSql, exportDb } =
-    useDatabaseWorker();
+  const { isReady, error, queryData, tableStructure } =
+    useDatabaseWorkerContext();
 
   return (
     <>
@@ -24,12 +24,7 @@ function App() {
         height="100vh"
       >
         <Box gridArea="editor" maxHeight="50vh">
-          <QueryEditor
-            execSql={execSql}
-            exportDb={exportDb}
-            isReady={isReady}
-            tableStructure={tableStructure}
-          />
+          <QueryEditor isReady={isReady} tableStructure={tableStructure} />
         </Box>
         <Box
           p={3}
