@@ -87,6 +87,13 @@ export function useDatabaseWorker() {
           })();
           break;
 
+        case DatabaseWorkerMessageStatus.IMPORTDATABASE:
+          dbWorkerRef.current?.port.postMessage({
+            mode: DatabaseWorkerMessageStatus.HIDDENRESULT,
+            query: getTableAndColumns,
+          });
+          break;
+
         default:
           break;
       }
@@ -118,8 +125,16 @@ export function useDatabaseWorker() {
     });
   }, []);
 
+  const importDb = useCallback((payload: ArrayBuffer) => {
+    dbWorkerRef.current?.port.postMessage({
+      mode: DatabaseWorkerMessageStatus.IMPORTDATABASE,
+      payload,
+    });
+  }, []);
+
   return {
     execSql,
     exportDb,
+    importDb,
   };
 }

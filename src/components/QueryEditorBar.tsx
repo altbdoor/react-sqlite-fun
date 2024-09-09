@@ -9,20 +9,23 @@ import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import Tooltip from "@mui/material/Tooltip";
 import { useTheme } from "@mui/material/styles";
-import { useRef, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import { anchorClick } from "../hooks/anchor-click";
 import { getAllTables, getTableAndColumns } from "../shared/sql-query";
+import { useDatabaseWorker } from "../hooks/use-database-worker";
 
 interface QueryEditorBarProps {
   isReady: boolean;
   execSql: (query?: string) => void;
-  exportDb: () => void;
 }
 
 export function QueryEditorBar(props: QueryEditorBarProps) {
   const { palette } = useTheme();
   const extrasAnchorRef = useRef<HTMLDivElement>(null);
   const [openExtras, setOpenExtras] = useState(false);
+
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const { exportDb, importDb } = useDatabaseWorker();
 
   const buttonActions = [
     { label: "Show all tables", sql: getAllTables },
@@ -53,6 +56,21 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
     setOpenExtras(false);
   };
 
+  const importFileChange = (evt: ChangeEvent<HTMLInputElement>) => {
+    const file = evt.target.files && evt.target.files[0];
+    if (!file) {
+      return;
+    }
+
+    const fr = new FileReader();
+    fr.onload = () => {
+      if (fr.result) {
+        importDb(fr.result as ArrayBuffer);
+      }
+    };
+    fr.readAsArrayBuffer(file);
+  };
+
   return (
     <>
       <Box
@@ -77,8 +95,22 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
               ⚡ Run
             </Button>
           </Tooltip>
-          <Button type="button" color="secondary" onClick={props.exportDb}>
+          <Button type="button" color="secondary" onClick={exportDb}>
             Export
+          </Button>
+          <Button
+            type="button"
+            color="secondary"
+            onClick={() => importFileRef.current?.click()}
+          >
+            <input
+              type="file"
+              ref={importFileRef}
+              hidden
+              accept=".sqlite, .sqlite3, .db"
+              onChange={importFileChange}
+            />
+            Import
           </Button>
         </ButtonGroup>
         <Popper

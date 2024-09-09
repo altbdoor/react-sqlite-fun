@@ -20,7 +20,7 @@ interface QueryEditorProps {
 export function QueryEditor({ tableStructure, ...props }: QueryEditorProps) {
   const containerRef = useRef(null);
   const editorRef = useRef<EditorFromTextArea>();
-  const { execSql, exportDb } = useDatabaseWorker();
+  const { execSql } = useDatabaseWorker();
 
   const editorExecSql = useCallback(
     (query?: string) => {
@@ -84,11 +84,7 @@ export function QueryEditor({ tableStructure, ...props }: QueryEditorProps) {
 
   return (
     <Stack height="100%" className="editor">
-      <QueryEditorBar
-        isReady={props.isReady}
-        execSql={editorExecSql}
-        exportDb={exportDb}
-      />
+      <QueryEditorBar isReady={props.isReady} execSql={editorExecSql} />
       <div>{/* odd div needed for codemirror textarea */}</div>
       <textarea ref={containerRef}></textarea>
     </Stack>

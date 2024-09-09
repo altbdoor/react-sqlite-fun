@@ -16,6 +16,11 @@ interface QueryData {
   query: string;
 }
 
+interface ImportData {
+  mode: DatabaseWorkerMessageStatus.IMPORTDATABASE;
+  payload: ArrayBuffer;
+}
+
 const getTableCount = () => {
   if (!globDb) {
     return -1;
@@ -65,12 +70,39 @@ self.addEventListener("connect", async (evt) => {
   }
 
   port.onmessage = async (portEvt) => {
-    const portEvtData: QueryData = portEvt.data;
+    const portEvtData: QueryData | ImportData = portEvt.data;
 
     if (portEvtData.mode === DatabaseWorkerMessageStatus.EXPORTDATABASE) {
       // https://sqlite.org/wasm/doc/trunk/cookbook.md#impexp
       const byteArray = globSqlite!.capi.sqlite3_js_db_export(globDb!);
       port.postMessage({ status: portEvtData.mode, data: byteArray.buffer });
+      return;
+    }
+
+    if (portEvtData.mode === DatabaseWorkerMessageStatus.IMPORTDATABASE) {
+      if (!globSqlite) {
+        return;
+      }
+
+      const pointer = globSqlite.wasm.allocFromTypedArray(portEvtData.payload);
+      const newDb = new globSqlite.oo1.DB({
+        filename: "/database.sqlite",
+        flags: "cw",
+      });
+
+      const rc = globSqlite!.capi.sqlite3_deserialize(
+        newDb.pointer!,
+        "main",
+        pointer,
+        portEvtData.payload.byteLength,
+        portEvtData.payload.byteLength,
+        globSqlite.capi.SQLITE_DESERIALIZE_FREEONCLOSE |
+          globSqlite.capi.SQLITE_DESERIALIZE_RESIZEABLE,
+      );
+      newDb.checkRc(rc);
+      globDb = newDb;
+
+      port.postMessage({ status: portEvtData.mode });
       return;
     }
 
