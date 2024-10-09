@@ -1,20 +1,22 @@
-import Box from "@mui/material/Box";
-import { CustomTable } from "./CustomTable";
-
 export function RenderTables(props: { data: any[] }) {
   if (props.data.length === 0) {
-    return <></>;
+    return null;
   }
 
   const headers = Object.keys(props.data[0]).map((header, idx) => (
-    <th key={"data-header" + idx}>{header}</th>
+    <th
+      key={"data-header" + idx}
+      className="p-2 border border-neutral-content align-bottom"
+    >
+      {header}
+    </th>
   ));
 
   return (
     <>
       <strong>{props.data.length} result(s)</strong>
-      <Box style={{ overflowX: "auto" }}>
-        <CustomTable customCellPadding={1} className="font-monospace">
+      <div className="overflow-x-auto pt-3">
+        <table className="font-mono border-collapse table-zebra">
           <thead>
             <tr>{headers}</tr>
           </thead>
@@ -22,13 +24,18 @@ export function RenderTables(props: { data: any[] }) {
             {props.data.map((datum, rowIdx) => (
               <tr key={"data-row" + rowIdx}>
                 {Object.values(datum).map((val, colIdx) => (
-                  <td key={"data-col" + colIdx}>{val as any}</td>
+                  <td
+                    key={"data-col" + colIdx}
+                    className="p-2 border border-neutral-content align-top"
+                  >
+                    {val as any}
+                  </td>
                 ))}
               </tr>
             ))}
           </tbody>
-        </CustomTable>
-      </Box>
+        </table>
+      </div>
     </>
   );
 }

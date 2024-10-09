@@ -1,4 +1,3 @@
-import Stack from "@mui/material/Stack";
 import { Editor, EditorFromTextArea, fromTextArea } from "codemirror";
 import { useCallback, useEffect, useRef } from "react";
 import { useDatabaseWorker } from "../hooks/use-database-worker";
@@ -51,6 +50,24 @@ export function QueryEditor({ tableStructure, ...props }: QueryEditorProps) {
   }, []);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleThemeChange = () => {
+      let theme = "default";
+
+      if (mediaQuery.matches) {
+        theme = "monokai";
+      }
+
+      editorRef.current?.setOption("theme", theme);
+    };
+
+    mediaQuery.addEventListener("change", handleThemeChange);
+    handleThemeChange();
+
+    return () => mediaQuery.removeEventListener("change", handleThemeChange);
+  }, []);
+
+  useEffect(() => {
     if (!editorRef.current) {
       return;
     }
@@ -83,10 +100,10 @@ export function QueryEditor({ tableStructure, ...props }: QueryEditorProps) {
   }, [tableStructure]);
 
   return (
-    <Stack height="100%" className="editor">
+    <div className="h-full editor">
       <QueryEditorBar isReady={props.isReady} execSql={editorExecSql} />
       <div>{/* odd div needed for codemirror textarea */}</div>
       <textarea ref={containerRef}></textarea>
-    </Stack>
+    </div>
   );
 }

@@ -1,12 +1,17 @@
 @import "codemirror/lib/codemirror.css";
+@import "codemirror/theme/monokai.css";
 @import "codemirror/addon/hint/show-hint.css";
 
-body {
-  min-width: 960px;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-size: 16px;
 }
 
-.font-monospace {
-  font-family: monospace;
+body {
+  min-width: 60rem;
 }
 
 .editor__actions {
@@ -15,4 +20,8 @@ body {
 
 .editor > .CodeMirror {
   height: calc(100% - 3rem);
+}
+
+.editor > .CodeMirror *:focus-visible {
+  outline: none;
 }

@@ -1,14 +1,3 @@
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import ButtonGroup from "@mui/material/ButtonGroup";
-import Chip from "@mui/material/Chip";
-import ClickAwayListener from "@mui/material/ClickAwayListener";
-import MenuItem from "@mui/material/MenuItem";
-import MenuList from "@mui/material/MenuList";
-import Paper from "@mui/material/Paper";
-import Popper from "@mui/material/Popper";
-import Tooltip from "@mui/material/Tooltip";
-import { useTheme } from "@mui/material/styles";
 import { ChangeEvent, useRef, useState } from "react";
 import { anchorClick } from "../hooks/anchor-click";
 import { getAllTables, getTableAndColumns } from "../shared/sql-query";
@@ -20,8 +9,6 @@ interface QueryEditorBarProps {
 }
 
 export function QueryEditorBar(props: QueryEditorBarProps) {
-  const { palette } = useTheme();
-  const extrasAnchorRef = useRef<HTMLDivElement>(null);
   const [openExtras, setOpenExtras] = useState(false);
 
   const importFileRef = useRef<HTMLInputElement>(null);
@@ -73,73 +60,74 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
 
   return (
     <>
-      <Box
-        className="editor__actions"
-        px={2}
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        borderBottom={`1px solid ${palette.grey[400]}`}
-        flexShrink={0}
-      >
-        <ButtonGroup ref={extrasAnchorRef}>
-          <Button type="button" onClick={() => setOpenExtras((prev) => !prev)}>
-            🤚 Extras
-          </Button>
-          <Tooltip title="Ctrl + Enter" arrow>
-            <Button
-              type="button"
-              color="success"
-              onClick={() => props.execSql()}
-            >
-              ⚡ Run
-            </Button>
-          </Tooltip>
-          <Button type="button" color="secondary" onClick={exportDb}>
+      <div className="editor__actions px-2 flex items-center justify-between border-b border-neutral-content">
+        <div className="flex gap-1">
+          <details
+            className="dropdown"
+            open={openExtras}
+            onToggle={(e) => setOpenExtras(e.currentTarget.open)}
+          >
+            <summary className="btn btn-sm">Extras ⏷</summary>
+            <ul className="menu dropdown-content bg-base-100 rounded-box z-[1] w-60 p-2 border border-neutral-content mt-1">
+              {buttonActions.map((action) => (
+                <li key={action.label}>
+                  {action.href && (
+                    <a
+                      href={action.href}
+                      target="_blank"
+                      referrerPolicy="no-referrer"
+                      onClick={() => setOpenExtras(false)}
+                    >
+                      {action.label}
+                    </a>
+                  )}
+
+                  {!action.href && (
+                    <a href="#" onClick={() => buttonClick(action)}>
+                      {action.label}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </details>
+
+          <button className="btn btn-sm" type="button" onClick={exportDb}>
             Export
-          </Button>
-          <Button
+          </button>
+
+          <button
+            className="btn btn-sm"
             type="button"
-            color="secondary"
             onClick={() => importFileRef.current?.click()}
           >
             <input
               type="file"
               ref={importFileRef}
-              hidden
+              className="hidden"
               accept=".sqlite, .sqlite3, .db"
               onChange={importFileChange}
             />
             Import
-          </Button>
-        </ButtonGroup>
-        <Popper
-          anchorEl={extrasAnchorRef.current}
-          open={openExtras}
-          placement="bottom-start"
-        >
-          <Paper>
-            <ClickAwayListener onClickAway={() => setOpenExtras(false)}>
-              <MenuList autoFocusItem>
-                {buttonActions.map((action) => (
-                  <MenuItem
-                    key={action.label}
-                    onClick={() => buttonClick(action)}
-                  >
-                    {action.label}
-                  </MenuItem>
-                ))}
-              </MenuList>
-            </ClickAwayListener>
-          </Paper>
-        </Popper>
+          </button>
+
+          <div className="tooltip tooltip-bottom" data-tip="Ctrl + Enter">
+            <button
+              className="btn btn-sm btn-primary"
+              type="button"
+              onClick={() => props.execSql()}
+            >
+              ⚡ Run
+            </button>
+          </div>
+        </div>
 
         {props.isReady ? (
-          <Chip label="Ready" color="success" />
+          <div className="badge badge-primary">Ready</div>
         ) : (
-          <Chip label="Loading..." color="default" />
+          <div className="badge badge-neutral">Loading...</div>
         )}
-      </Box>
+      </div>
     </>
   );
 }
