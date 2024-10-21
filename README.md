@@ -8,6 +8,6 @@ Powered by:
 - [Codemirror 5](https://codemirror.net/5/)
   - I skipped Codemirror 6 because it seems a little complicated to setup
   - And Monaco was _definitely_ too complicated (for me)
-- [MUI Material](https://mui.com/material-ui/getting-started/)
+- [DaisyUI](https://daisyui.com/)
 - [Northwind database](https://en.wikiversity.org/wiki/Database_Examples/Northwind/SQLite)
 - All wrapped in React 18
