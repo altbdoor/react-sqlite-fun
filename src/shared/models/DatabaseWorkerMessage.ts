@@ -1,3 +1,6 @@
+import { QueryData } from "./QueryData";
+import { FixedTableStructureData } from "./TableStructureData";
+
 export enum DatabaseWorkerMessageStatus {
   INITREADY,
   INITERROR,
@@ -8,37 +11,65 @@ export enum DatabaseWorkerMessageStatus {
   IMPORTDATABASE,
 }
 
-type InitReady = {
+type InitReadyOutput = {
   status: DatabaseWorkerMessageStatus.INITREADY;
   data: number;
 };
-type InitError = { status: DatabaseWorkerMessageStatus.INITERROR; data: Error };
-type QueryError = {
+type InitErrorOutput = {
+  status: DatabaseWorkerMessageStatus.INITERROR;
+  data: Error;
+};
+type QueryErrorOutput = {
   status: DatabaseWorkerMessageStatus.QUERYERROR;
   data: Error;
 };
-type QueryResult = {
+type QueryResultOutput = {
   status: DatabaseWorkerMessageStatus.QUERYRESULT;
-  data: any[];
+  data: QueryData;
 };
-type HiddenResult = {
+type HiddenResultOutput = {
   status: DatabaseWorkerMessageStatus.HIDDENRESULT;
-  data: any[];
+  data: FixedTableStructureData;
 };
-type ExportDatabase = {
+type ExportDatabaseOutput = {
   status: DatabaseWorkerMessageStatus.EXPORTDATABASE;
   data: ArrayBuffer;
 };
-type ImportDatabase = {
+type ImportDatabaseOutput = {
   status: DatabaseWorkerMessageStatus.IMPORTDATABASE;
   data: undefined;
 };
 
-export type DatabaseWorkerMessage =
-  | InitReady
-  | InitError
-  | QueryError
-  | QueryResult
-  | HiddenResult
-  | ExportDatabase
-  | ImportDatabase;
+export type DatabaseWorkerOutputMessage =
+  | InitReadyOutput
+  | InitErrorOutput
+  | QueryErrorOutput
+  | QueryResultOutput
+  | HiddenResultOutput
+  | ExportDatabaseOutput
+  | ImportDatabaseOutput;
+
+type QueryResultInput = {
+  mode: DatabaseWorkerMessageStatus.QUERYRESULT;
+  query: string;
+};
+
+type HiddenResultInput = {
+  mode: DatabaseWorkerMessageStatus.HIDDENRESULT;
+  query: string;
+};
+
+type ExportDatabaseInput = {
+  mode: DatabaseWorkerMessageStatus.EXPORTDATABASE;
+};
+
+type ImportDataInput = {
+  mode: DatabaseWorkerMessageStatus.IMPORTDATABASE;
+  payload: ArrayBuffer;
+};
+
+export type DatabaseWorkerInputMessage =
+  | QueryResultInput
+  | HiddenResultInput
+  | ExportDatabaseInput
+  | ImportDataInput;

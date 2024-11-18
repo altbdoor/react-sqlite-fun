@@ -7,16 +7,15 @@ import {
 } from "react";
 import { anchorClick } from "../hooks/anchor-click";
 import {
-  DatabaseWorkerMessage,
+  DatabaseWorkerInputMessage,
   DatabaseWorkerMessageStatus,
+  DatabaseWorkerOutputMessage,
 } from "../shared/models/DatabaseWorkerMessage";
-import {
-  FixedTableStructureData,
-  TableStructureData,
-} from "../shared/models/TableStructureData";
+import { FixedTableStructureData } from "../shared/models/TableStructureData";
 import { getTableAndColumns } from "../shared/sql-query";
 import DbWorker from "../workers/database.worker?sharedworker";
 import { DatabaseWorkerContext } from "./database-worker-context";
+import { QueryData } from "../shared/models/QueryData";
 
 export const DatabaseWorkerProvider = ({ children }: PropsWithChildren) => {
   const dbWorkerRef = useRef<SharedWorker>(null);
@@ -25,10 +24,19 @@ export const DatabaseWorkerProvider = ({ children }: PropsWithChildren) => {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<Error>();
 
-  const [queryData, setQueryData] = useState<any[]>([]);
+  const [queryData, setQueryData] = useState<QueryData>([]);
   const [tableStructure, setTableStructure] = useState<FixedTableStructureData>(
     {},
   );
+
+  const sendPortWrapper =
+    (port?: MessagePort) => (data: DatabaseWorkerInputMessage) => {
+      if (!port) {
+        return;
+      }
+
+      port.postMessage(data);
+    };
 
   useEffect(() => {
     if (!dbWorkerRef.current) {
@@ -36,69 +44,64 @@ export const DatabaseWorkerProvider = ({ children }: PropsWithChildren) => {
     }
 
     dbWorkerRef.current.port.onmessage = (
-      evt: MessageEvent<DatabaseWorkerMessage>,
+      evt: MessageEvent<DatabaseWorkerOutputMessage>,
     ) => {
-      switch (evt.data.status) {
-        case DatabaseWorkerMessageStatus.INITERROR:
-        case DatabaseWorkerMessageStatus.QUERYERROR:
-          setError(evt.data.data);
-          break;
+      const sendPort = sendPortWrapper(dbWorkerRef.current?.port);
 
-        case DatabaseWorkerMessageStatus.INITREADY:
-          setIsReady(true);
-          dbWorkerRef.current?.port.postMessage({
-            mode: DatabaseWorkerMessageStatus.HIDDENRESULT,
-            query: getTableAndColumns,
-          });
-          break;
+      if (
+        evt.data.status === DatabaseWorkerMessageStatus.INITERROR ||
+        evt.data.status === DatabaseWorkerMessageStatus.QUERYERROR
+      ) {
+        setError(evt.data.data);
+        return;
+      }
 
-        case DatabaseWorkerMessageStatus.QUERYRESULT:
-          setQueryData(evt.data.data);
-          dbWorkerRef.current?.port.postMessage({
-            mode: DatabaseWorkerMessageStatus.HIDDENRESULT,
-            query: getTableAndColumns,
-          });
-          break;
+      if (evt.data.status === DatabaseWorkerMessageStatus.INITREADY) {
+        setIsReady(true);
+        sendPort({
+          mode: DatabaseWorkerMessageStatus.HIDDENRESULT,
+          query: getTableAndColumns,
+        });
+        return;
+      }
 
-        case DatabaseWorkerMessageStatus.HIDDENRESULT:
-          setTableStructure(() => {
-            return (evt.data.data as TableStructureData[]).reduce(
-              (acc, val) => {
-                acc[val.table_name] = val.column_names.split(", ");
-                return acc;
-              },
-              {} as FixedTableStructureData,
-            );
-          });
-          break;
+      if (evt.data.status === DatabaseWorkerMessageStatus.QUERYRESULT) {
+        setQueryData(evt.data.data);
+        sendPort({
+          mode: DatabaseWorkerMessageStatus.HIDDENRESULT,
+          query: getTableAndColumns,
+        });
+        return;
+      }
 
-        case DatabaseWorkerMessageStatus.EXPORTDATABASE:
-          (() => {
-            const blob = new Blob([evt.data.data], {
-              type: "application/x-sqlite3",
-            });
+      if (evt.data.status === DatabaseWorkerMessageStatus.HIDDENRESULT) {
+        setTableStructure(evt.data.data);
+        return;
+      }
 
-            if (blobRef.current) {
-              URL.revokeObjectURL(blobRef.current);
-            }
+      if (evt.data.status === DatabaseWorkerMessageStatus.EXPORTDATABASE) {
+        const blob = new Blob([evt.data.data], {
+          type: "application/x-sqlite3",
+        });
 
-            blobRef.current = URL.createObjectURL(blob);
-            anchorClick({
-              href: blobRef.current,
-              download: "database.sqlite",
-            });
-          })();
-          break;
+        if (blobRef.current) {
+          URL.revokeObjectURL(blobRef.current);
+        }
 
-        case DatabaseWorkerMessageStatus.IMPORTDATABASE:
-          dbWorkerRef.current?.port.postMessage({
-            mode: DatabaseWorkerMessageStatus.HIDDENRESULT,
-            query: getTableAndColumns,
-          });
-          break;
+        blobRef.current = URL.createObjectURL(blob);
+        anchorClick({
+          href: blobRef.current,
+          download: "database.sqlite",
+        });
+        return;
+      }
 
-        default:
-          break;
+      if (evt.data.status === DatabaseWorkerMessageStatus.IMPORTDATABASE) {
+        sendPort({
+          mode: DatabaseWorkerMessageStatus.HIDDENRESULT,
+          query: getTableAndColumns,
+        });
+        return;
       }
     };
 
@@ -117,31 +120,29 @@ export const DatabaseWorkerProvider = ({ children }: PropsWithChildren) => {
   const execSql = useCallback((query: string) => {
     setError(undefined);
 
-    dbWorkerRef.current?.port.postMessage({
+    sendPortWrapper(dbWorkerRef.current?.port)({
       mode: DatabaseWorkerMessageStatus.QUERYRESULT,
       query,
     });
   }, []);
 
   const exportDb = useCallback(() => {
-    dbWorkerRef.current?.port.postMessage({
+    sendPortWrapper(dbWorkerRef.current?.port)({
       mode: DatabaseWorkerMessageStatus.EXPORTDATABASE,
     });
   }, []);
 
   const importDb = useCallback((file: File) => {
-    const fr = new FileReader();
-    fr.onload = () => {
-      if (fr.result) {
-        const frBuffer = fr.result as ArrayBuffer;
-
-        dbWorkerRef.current?.port.postMessage({
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        sendPortWrapper(dbWorkerRef.current?.port)({
           mode: DatabaseWorkerMessageStatus.IMPORTDATABASE,
-          frBuffer,
+          payload: reader.result as ArrayBuffer,
         });
       }
     };
-    fr.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(file);
   }, []);
 
   return (

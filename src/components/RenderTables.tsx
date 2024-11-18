@@ -1,4 +1,6 @@
-export function RenderTables(props: { data: any[] }) {
+import { QueryData } from "../shared/models/QueryData";
+
+export function RenderTables(props: { data: QueryData }) {
   if (props.data.length === 0) {
     return null;
   }
@@ -28,7 +30,7 @@ export function RenderTables(props: { data: any[] }) {
                     key={"data-col" + colIdx}
                     className="p-2 border border-neutral-content align-top"
                   >
-                    {val as any}
+                    {val}
                   </td>
                 ))}
               </tr>

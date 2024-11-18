@@ -2,24 +2,16 @@ import sqlite3InitModule, {
   type Database,
   type Sqlite3Static,
 } from "@sqlite.org/sqlite-wasm";
-import { DatabaseWorkerMessageStatus } from "../shared/models/DatabaseWorkerMessage";
+import {
+  DatabaseWorkerInputMessage,
+  DatabaseWorkerMessageStatus,
+  DatabaseWorkerOutputMessage,
+} from "../shared/models/DatabaseWorkerMessage";
+import { FixedTableStructureData } from "../shared/models/TableStructureData";
 
 let isInit = false;
 let globDb: Database | undefined = undefined;
 let globSqlite: Sqlite3Static | undefined = undefined;
-
-interface QueryData {
-  mode:
-    | DatabaseWorkerMessageStatus.QUERYRESULT
-    | DatabaseWorkerMessageStatus.HIDDENRESULT
-    | DatabaseWorkerMessageStatus.EXPORTDATABASE;
-  query: string;
-}
-
-interface ImportData {
-  mode: DatabaseWorkerMessageStatus.IMPORTDATABASE;
-  payload: ArrayBuffer;
-}
 
 const getTableCount = () => {
   if (!globDb) {
@@ -36,6 +28,9 @@ const getTableCount = () => {
 
 self.addEventListener("connect", async (evt) => {
   const port = (evt as any).ports[0] as MessagePort;
+  const sendPort = (data: DatabaseWorkerOutputMessage) => {
+    port.postMessage(data);
+  };
 
   if (!isInit) {
     try {
@@ -45,52 +40,55 @@ self.addEventListener("connect", async (evt) => {
 
       isInit = true;
 
-      port.postMessage({
+      sendPort({
         status: DatabaseWorkerMessageStatus.INITREADY,
         data: getTableCount(),
       });
     } catch (err) {
       console.error(err);
-      port.postMessage({
+      sendPort({
         status: DatabaseWorkerMessageStatus.INITERROR,
-        data: err,
+        data: err as Error,
       });
     }
   } else {
     const tableCount = getTableCount();
 
     if (tableCount > 0) {
-      port.postMessage({
+      sendPort({
         status: DatabaseWorkerMessageStatus.INITREADY,
         data: tableCount,
       });
     } else {
-      port.postMessage({ status: DatabaseWorkerMessageStatus.INITERROR });
+      sendPort({
+        status: DatabaseWorkerMessageStatus.INITERROR,
+        data: new Error("earlier initialization failed"),
+      });
     }
   }
 
-  port.onmessage = async (portEvt) => {
-    const portEvtData: QueryData | ImportData = portEvt.data;
+  port.onmessage = (portEvt) => {
+    if (!globSqlite || !globDb) {
+      return;
+    }
+
+    const portEvtData: DatabaseWorkerInputMessage = portEvt.data;
 
     if (portEvtData.mode === DatabaseWorkerMessageStatus.EXPORTDATABASE) {
       // https://sqlite.org/wasm/doc/trunk/cookbook.md#impexp
-      const byteArray = globSqlite!.capi.sqlite3_js_db_export(globDb!);
-      port.postMessage({ status: portEvtData.mode, data: byteArray.buffer });
+      const byteArray = globSqlite.capi.sqlite3_js_db_export(globDb);
+      sendPort({ status: portEvtData.mode, data: byteArray.buffer });
       return;
     }
 
     if (portEvtData.mode === DatabaseWorkerMessageStatus.IMPORTDATABASE) {
-      if (!globSqlite) {
-        return;
-      }
-
       const pointer = globSqlite.wasm.allocFromTypedArray(portEvtData.payload);
       const newDb = new globSqlite.oo1.DB({
         filename: "/database.sqlite",
         flags: "cw",
       });
 
-      const rc = globSqlite!.capi.sqlite3_deserialize(
+      const rc = globSqlite.capi.sqlite3_deserialize(
         newDb.pointer!,
         "main",
         pointer,
@@ -102,22 +100,38 @@ self.addEventListener("connect", async (evt) => {
       newDb.checkRc(rc);
       globDb = newDb;
 
-      port.postMessage({ status: portEvtData.mode });
+      sendPort({ status: portEvtData.mode, data: undefined });
       return;
     }
 
     try {
-      const data = globDb!.exec({
+      const data = globDb.exec({
         sql: portEvtData.query,
         returnValue: "resultRows",
         rowMode: "object",
       });
 
-      port.postMessage({ status: portEvtData.mode, data });
+      if (portEvtData.mode === DatabaseWorkerMessageStatus.QUERYRESULT) {
+        sendPort({ status: portEvtData.mode, data });
+        return;
+      }
+
+      const hiddenTableData = data
+        .map((datum) => ({
+          table_name: datum.table_name?.toString() || "",
+          column_names: datum.column_names?.toString() || "",
+        }))
+        .filter((datum) => !!datum.table_name)
+        .reduce((acc, val) => {
+          acc[val.table_name] = val.column_names.split(", ");
+          return acc;
+        }, {} as FixedTableStructureData);
+
+      sendPort({ status: portEvtData.mode, data: hiddenTableData });
     } catch (err) {
-      port.postMessage({
+      sendPort({
         status: DatabaseWorkerMessageStatus.QUERYERROR,
-        data: err,
+        data: err as Error,
       });
       console.error(err);
     }
