@@ -17,23 +17,31 @@ interface QueryEditorProps {
 }
 
 export function QueryEditor({ tableStructure, ...props }: QueryEditorProps) {
-  const containerRef = useRef(null);
-  const editorRef = useRef<EditorFromTextArea>();
+  const containerRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<EditorFromTextArea>(null);
   const { execSql } = useDatabaseWorker();
 
   const editorExecSql = useCallback(
     (query?: string) => {
-      if (query) {
-        editorRef.current!.setValue(query);
+      if (!editorRef.current) {
+        return;
       }
 
-      execSql(editorRef.current!.getValue());
+      if (query) {
+        editorRef.current.setValue(query);
+      }
+
+      execSql(editorRef.current.getValue());
     },
     [execSql],
   );
 
   useEffect(() => {
-    const editor = fromTextArea(containerRef.current!, {
+    if (!containerRef.current) {
+      return;
+    }
+
+    const editor = fromTextArea(containerRef.current, {
       mode: "text/x-sqlite",
       lineNumbers: true,
       lineWrapping: true,

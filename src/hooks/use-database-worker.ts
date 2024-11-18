@@ -24,7 +24,7 @@ export function useDatabaseWorker() {
   const { setIsReady, setError, setQueryData, setTableStructure } =
     useDatabaseWorkerContext();
 
-  const dbWorkerRef = useRef<SharedWorker | null>(null);
+  const dbWorkerRef = useRef<SharedWorker>(null);
   const blobRef = useRef<string>("");
 
   useEffect(() => {

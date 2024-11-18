@@ -29,44 +29,6 @@ function App() {
           <TableStructure data={tableStructure} />
         </div>
       </div>
-      {/*
-      <Box
-        display="grid"
-        gridTemplateAreas='"editor tables" "structure tables"'
-        gridTemplateColumns="1fr 1fr"
-        gridTemplateRows="1fr 1fr"
-        height="100vh"
-      >
-        <Box gridArea="editor" maxHeight="50vh">
-          <QueryEditor isReady={isReady} tableStructure={tableStructure} />
-        </Box>
-        <Box
-          p={3}
-          overflow="auto"
-          gridArea="tables"
-          borderLeft="1px solid"
-          borderColor={palette.grey[400]}
-        >
-          {!!error && (
-            <Box mb={2}>
-              <Alert severity="error">
-                <AlertTitle>{error.name}</AlertTitle>
-                {error.message}
-              </Alert>
-            </Box>
-          )}
-          <RenderTables data={queryData} />
-        </Box>
-        <Box
-          p={3}
-          overflow="auto"
-          gridArea="structure"
-          borderTop="1px solid"
-          borderColor={palette.grey[400]}
-        >
-          <TableStructure data={tableStructure} />
-        </Box>
-      </Box> */}
     </>
   );
 }

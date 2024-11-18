@@ -1,7 +1,6 @@
 import { ChangeEvent, useRef, useState } from "react";
-import { anchorClick } from "../hooks/anchor-click";
-import { getAllTables, getTableAndColumns } from "../shared/sql-query";
 import { useDatabaseWorker } from "../hooks/use-database-worker";
+import { getAllTables, getTableAndColumns } from "../shared/sql-query";
 
 interface QueryEditorBarProps {
   isReady: boolean;
@@ -34,10 +33,6 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
   const buttonClick = (action: (typeof buttonActions)[number]) => {
     if (action.sql) {
       props.execSql(action.sql);
-    }
-
-    if (action.href) {
-      anchorClick({ href: action.href, target: "_blank" });
     }
 
     setOpenExtras(false);
