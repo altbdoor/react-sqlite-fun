@@ -1,4 +1,4 @@
-import { ChangeEvent, MouseEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useDatabaseWorkerMethodsContext } from "../hooks/use-database-worker";
 import { getAllTables, getTableAndColumns } from "../shared/sql-query";
 
@@ -8,7 +8,26 @@ interface QueryEditorBarProps {
 }
 
 export function QueryEditorBar(props: QueryEditorBarProps) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
   const [openExtras, setOpenExtras] = useState(false);
+
+  useEffect(() => {
+    if (!openExtras) {
+      return;
+    }
+
+    const docClickHandler = (evt: MouseEvent) => {
+      if (
+        detailsRef.current &&
+        !detailsRef.current.contains(evt.target as HTMLElement)
+      ) {
+        setOpenExtras(false);
+      }
+    };
+
+    document.addEventListener("click", docClickHandler);
+    return () => document.removeEventListener("click", docClickHandler);
+  }, [openExtras]);
 
   const importFileRef = useRef<HTMLInputElement>(null);
   const { exportDb, importDb } = useDatabaseWorkerMethodsContext();
@@ -53,6 +72,7 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
             className="dropdown"
             open={openExtras}
             onToggle={(e) => setOpenExtras(e.currentTarget.open)}
+            ref={detailsRef}
           >
             <summary className="btn btn-sm">Extras ⏷</summary>
             <ul className="menu dropdown-content bg-base-100 rounded-box z-[1] w-60 p-2 border border-neutral-content mt-1">

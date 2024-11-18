@@ -1,6 +1,8 @@
 import { FixedTableStructureData } from "../shared/models/TableStructureData";
 
 export function TableStructure(props: { data: FixedTableStructureData }) {
+  const sortedKeys = Object.keys(props.data).sort();
+
   return (
     <>
       <strong>Table structure</strong>
@@ -15,14 +17,14 @@ export function TableStructure(props: { data: FixedTableStructureData }) {
             </tr>
           </thead>
           <tbody>
-            {Object.entries(props.data).map(([row, columns], rowIdx) => (
+            {sortedKeys.map((key, rowIdx) => (
               <tr key={"data-row" + rowIdx}>
                 <td className="align-top p-2 border border-neutral-content">
-                  {row}
+                  {key}
                 </td>
                 <td className="align-top p-2 border border-neutral-content">
                   <ol style={{ margin: 0 }}>
-                    {columns.map((col, colIdx) => (
+                    {props.data[key].map((col, colIdx) => (
                       <li key={"data-col" + colIdx}>{col}</li>
                     ))}
                   </ol>
