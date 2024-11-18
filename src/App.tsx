@@ -1,11 +1,11 @@
 import { QueryEditor } from "./components/QueryEditor";
 import { RenderTables } from "./components/RenderTables";
 import { TableStructure } from "./components/TableStructure";
-import { useDatabaseWorkerContext } from "./hooks/use-database-worker";
+import { useDatabaseWorkerStateContext } from "./hooks/use-database-worker";
 
 function App() {
   const { isReady, error, queryData, tableStructure } =
-    useDatabaseWorkerContext();
+    useDatabaseWorkerStateContext();
 
   return (
     <>

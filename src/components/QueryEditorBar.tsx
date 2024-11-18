@@ -1,5 +1,5 @@
-import { ChangeEvent, useRef, useState } from "react";
-import { useDatabaseWorker } from "../hooks/use-database-worker";
+import { ChangeEvent, MouseEvent, useRef, useState } from "react";
+import { useDatabaseWorkerMethodsContext } from "../hooks/use-database-worker";
 import { getAllTables, getTableAndColumns } from "../shared/sql-query";
 
 interface QueryEditorBarProps {
@@ -11,7 +11,7 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
   const [openExtras, setOpenExtras] = useState(false);
 
   const importFileRef = useRef<HTMLInputElement>(null);
-  const { exportDb, importDb } = useDatabaseWorker();
+  const { exportDb, importDb } = useDatabaseWorkerMethodsContext();
 
   const buttonActions = [
     { label: "Show all tables", sql: getAllTables },
@@ -30,11 +30,9 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
     },
   ];
 
-  const buttonClick = (action: (typeof buttonActions)[number]) => {
-    if (action.sql) {
-      props.execSql(action.sql);
-    }
-
+  const handleExecSql = (evt: MouseEvent, sql: string) => {
+    evt.preventDefault();
+    props.execSql(sql);
     setOpenExtras(false);
   };
 
@@ -44,13 +42,7 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
       return;
     }
 
-    const fr = new FileReader();
-    fr.onload = () => {
-      if (fr.result) {
-        importDb(fr.result as ArrayBuffer);
-      }
-    };
-    fr.readAsArrayBuffer(file);
+    importDb(file);
   };
 
   return (
@@ -77,8 +69,11 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
                     </a>
                   )}
 
-                  {!action.href && (
-                    <a href="#" onClick={() => buttonClick(action)}>
+                  {action.sql && (
+                    <a
+                      href="#"
+                      onClick={(evt) => handleExecSql(evt, action.sql)}
+                    >
                       {action.label}
                     </a>
                   )}

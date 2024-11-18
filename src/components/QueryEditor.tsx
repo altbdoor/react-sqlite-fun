@@ -1,6 +1,6 @@
 import { Editor, EditorFromTextArea, fromTextArea } from "codemirror";
 import { useCallback, useEffect, useRef } from "react";
-import { useDatabaseWorker } from "../hooks/use-database-worker";
+import { useDatabaseWorkerMethodsContext } from "../hooks/use-database-worker";
 import { FixedTableStructureData } from "../shared/models/TableStructureData";
 import { initQuery } from "../shared/sql-query";
 import { QueryEditorBar } from "./QueryEditorBar";
@@ -19,7 +19,7 @@ interface QueryEditorProps {
 export function QueryEditor({ tableStructure, ...props }: QueryEditorProps) {
   const containerRef = useRef<HTMLTextAreaElement>(null);
   const editorRef = useRef<EditorFromTextArea>(null);
-  const { execSql } = useDatabaseWorker();
+  const { execSql } = useDatabaseWorkerMethodsContext();
 
   const editorExecSql = useCallback(
     (query?: string) => {
