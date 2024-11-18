@@ -1,4 +1,10 @@
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  MouseEvent as ReactMouseEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useDatabaseWorkerMethodsContext } from "../hooks/use-database-worker";
 import { getAllTables, getTableAndColumns } from "../shared/sql-query";
 
@@ -49,7 +55,7 @@ export function QueryEditorBar(props: QueryEditorBarProps) {
     },
   ];
 
-  const handleExecSql = (evt: MouseEvent, sql: string) => {
+  const handleExecSql = (evt: ReactMouseEvent, sql: string) => {
     evt.preventDefault();
     props.execSql(sql);
     setOpenExtras(false);
