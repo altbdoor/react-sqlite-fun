@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.worker.tsbuildinfo",
     "lib": ["ES2020", "WebWorker"]
   },
   "include": ["src/workers/", "src/assets", "src/vite-env.d.ts"],
